@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "dev.workers.giust.cucinapp.twa",
+    "sha256_cert_fingerprints": ["07:FF:A5:38:68:E4:F4:EC:FA:86:C6:84:64:D7:0F:B3:05:5E:C5:AE:85:71:20:B3:8A:59:80:C0:9B:73:C7:92"]
+  }
+}]
