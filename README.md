@@ -22,10 +22,11 @@ Questo progetto adotta uno schema di versionamento semantico incrementale (`MAJO
   * Si incrementa solo in caso di riscrittura architetturale profonda o breaking changes complessive dell'app.
 
 ### 📋 Checklist per ogni rilascio di versione:
-1. Aggiornare `"version"` in [`package.json`](./package.json).
-2. Aggiornare il badge visibile nell'header in [`src/components/Navbar.jsx`](./src/components/Navbar.jsx) (`vX.Y.Z`).
-3. Aggiornare `CACHE_NAME` in [`public/sw.js`](./public/sw.js) (es. `cucinapp-cache-vX.Y.Z`) per forzare l'aggiornamento istantaneo del Service Worker sui telefoni degli utenti.
-4. *(Obbligatorio per `x.Y.0` o `X.0.0`)*: Aggiungere il changelog in questo `README.md`.
+1. **Modificare `"version"` in [`package.json`](./package.json)**: `package.json` è l'**unica fonte di verità**. Il build tool di Vite propaga automaticamente la versione a:
+   * Header dell'app ([`Navbar.jsx`](./src/components/Navbar.jsx))
+   * Cache del Service Worker PWA (`cucinapp-cache-vX.Y.Z` in [`sw.js`](./public/sw.js))
+   * Metadati di backup esportati ([`db.js`](./src/services/db.js))
+2. *(Obbligatorio solo per `x.Y.0` o `X.0.0`)*: Aggiungere il nuovo blocco nel changelog in fondo a questo `README.md`.
 
 ---
 

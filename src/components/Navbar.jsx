@@ -18,7 +18,7 @@ export function Navbar({
           <div>
             <div className="logo-title">
               CucinApp
-              <span className="logo-version">v1.2.0</span>
+              <span className="logo-version">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.2.1'}</span>
             </div>
             <div className="logo-subtitle">Il tuo ricettario</div>
           </div>

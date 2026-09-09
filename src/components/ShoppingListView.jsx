@@ -9,7 +9,8 @@ export function ShoppingListView({
   onAddItem,
   onToggleItem,
   onDeleteItem,
-  onClearChecked
+  onClearChecked,
+  onClearAll
 }) {
   const [newItemName, setNewItemName] = useState('');
   const [newItemAmount, setNewItemAmount] = useState('');
@@ -83,6 +84,13 @@ export function ShoppingListView({
             <button className="btn-secondary btn-sm" onClick={onClearChecked} title="Elimina articoli spuntati">
               <Trash2 size={15} />
               <span className="hide-on-mobile">Rimuovi spuntati</span>
+            </button>
+          )}
+
+          {items.length > 0 && (
+            <button className="btn-secondary btn-sm" onClick={onClearAll} title="Svuota tutta la lista della spesa">
+              <Trash2 size={15} />
+              <span>Svuota</span>
             </button>
           )}
         </div>

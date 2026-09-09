@@ -285,6 +285,13 @@ export async function clearCheckedShoppingItems() {
   await tx.done;
 }
 
+export async function clearAllShoppingItems() {
+  const db = await getDB();
+  const tx = db.transaction('shoppingList', 'readwrite');
+  await tx.store.clear();
+  await tx.done;
+}
+
 // ------------------- BACKUP & EXPORT -------------------
 
 export async function exportAllData() {
@@ -294,7 +301,7 @@ export async function exportAllData() {
   const shoppingList = await db.getAll('shoppingList');
   return {
     app: 'CucinApp',
-    version: '1.2.0',
+    version: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.2.1',
     exportDate: new Date().toISOString(),
     recipes,
     shoppingList

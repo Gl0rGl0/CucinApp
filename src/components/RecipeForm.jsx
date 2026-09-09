@@ -188,21 +188,6 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
       )}
 
       <form onSubmit={handleSubmit} className="form-main-body">
-        {/* Quick Paste Banner */}
-        <div className="quick-paste-banner">
-          <div className="paste-banner-info">
-            <Sparkles size={18} className="text-highlight-orange" />
-            <span>Vuoi velocizzare? Incolla una ricetta copiata dal web o dagli appunti:</span>
-          </div>
-          <button
-            type="button"
-            className="btn-secondary btn-sm"
-            onClick={() => setShowPasteModal(true)}
-          >
-            <Sparkles size={14} />
-            <span>Incolla Testo</span>
-          </button>
-        </div>
         {/* Section 1: Main info */}
         <div className="form-card">
           <h3 className="form-section-title">Informazioni Generali</h3>
@@ -498,12 +483,12 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
         </div>
       </form>
 
-      {/* Quick Paste Modal */}
-      <QuickPasteModal
+      {/* Quick Paste Modal (temporaneamente nascosto in attesa di test completi) */}
+      {/* <QuickPasteModal
         isOpen={showPasteModal}
         onClose={() => setShowPasteModal(false)}
         onApplyParsedRecipe={handleApplyParsedRecipe}
-      />
+      /> */}
     </div>
   );
 }

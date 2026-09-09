@@ -12,7 +12,8 @@ import {
   addMultipleToShoppingList,
   toggleShoppingItem,
   deleteShoppingItem,
-  clearCheckedShoppingItems
+  clearCheckedShoppingItems,
+  clearAllShoppingItems
 } from './services/db';
 
 import { Navbar } from './components/Navbar';
@@ -196,6 +197,13 @@ export default function App() {
     setShoppingList(prev => prev.filter(item => !item.checked));
   };
 
+  const handleClearAllShopping = async () => {
+    if (window.confirm('Vuoi svuotare tutta la lista della spesa?')) {
+      await clearAllShoppingItems();
+      setShoppingList([]);
+    }
+  };
+
   // Cook Mode Launcher
   const handleStartCook = (recipe, servings) => {
     setCookingSession({
@@ -270,6 +278,7 @@ export default function App() {
             onToggleItem={handleToggleShoppingItem}
             onDeleteItem={handleDeleteShoppingItem}
             onClearChecked={handleClearCheckedShopping}
+            onClearAll={handleClearAllShopping}
           />
         ) : (
           /* Main Recipes Catalog View */

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cucinapp-cache-v1.2.0';
+const CACHE_NAME = 'cucinapp-cache-v__APP_VERSION__';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
