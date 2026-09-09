@@ -104,6 +104,19 @@ Il deploy è **completamente automatizzato via GitHub**:
 
 ## 📝 Registro Versioni (Changelog)
 
+### [1.3.1] - 2026-09-10
+* **Pannello Impostazioni Dedicato (`SettingsModal.jsx`):**
+  * Riorganizzazione dei comandi secondari in una modale centralizzata accessibile tramite l'icona ingranaggio nella Navbar.
+  * Spostamento del cambio tema (Chiaro/Scuro) e degli strumenti di Backup & Ripristino JSON all'interno delle impostazioni per una Navbar pulita.
+* **Sistema di Misura Metrico / Imperiale:**
+  * Supporto per la selezione tra sistema Metrico europeo (g, kg, ml, l) e sistema Imperiale US/UK (oz, lb, fl oz, cups).
+  * Ricalcolo automatico delle dosi e conversione delle unità nel Dettaglio Ricetta, nella Modalità Cottura e all'aggiunta degli ingredienti alla Lista della Spesa.
+* **Timer Resiliente in Background & Notifiche di Sistema:**
+  * Calcolo del timer tramite timestamp assoluto `Date.now()` e listener `visibilitychange`, garantendo precisione al secondo anche se l'app viene minimizzata (es. apertura di WhatsApp o blocco schermo).
+  * Invio di una notifica di sistema nativa (`Notification API`) al completamento del tempo di cottura a schermo spento o in background.
+* **Risoluzione Bug Sovrapposizione Pulsanti Navbar:**
+  * Risolto il problema di sovrapposizione orizzontale dei pulsanti su schermi ampi impostando `min-width: 38px`, `width: auto` e `white-space: nowrap` su `.nav-btn-icon`.
+
 ### [1.3.0] - 2026-09-10
 * **Esperienza Mobile Nativa (TWA & Android):**
   * **Navigazione Gesti Android (Gesture Back Navigation):** Collegamento dello storico del browser (`popstate`) a tutte le schermate e modali (dettaglio ricetta, form creazione ricetta, modalità cucina a schermo intero, svuotafrigo, backup e tab spesa). Il tasto "Indietro" o lo swipe laterale di Android chiude le viste aperte e torna al ricettario senza chiudere l'app.

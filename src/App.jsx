@@ -24,9 +24,9 @@ import { RecipeForm } from './components/RecipeForm';
 import { CookModeModal } from './components/CookModeModal';
 import { ShoppingListView } from './components/ShoppingListView';
 import { FridgeFilterModal } from './components/FridgeFilterModal';
-import { BackupModal } from './components/BackupModal';
+import { SettingsModal } from './components/SettingsModal';
 
-import { Search, Heart, X, BookOpen, Plus, ChefHat, Sparkles } from 'lucide-react';
+import { Search, Heart, X, Plus, ChefHat } from 'lucide-react';
 
 const CATEGORIES = ['Tutte', 'Primi', 'Secondi', 'Contorni', 'Dolci', 'Lievitati', 'Antipasti'];
 
@@ -43,7 +43,17 @@ export default function App() {
 
   // Modals
   const [showFridgeModal, setShowFridgeModal] = useState(false);
-  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Unit system: 'metric' | 'imperial'
+  const [unitSystem, setUnitSystem] = useState(() => {
+    return localStorage.getItem('cucinapp_units') || 'metric';
+  });
+
+  const handleUnitSystemChange = (system) => {
+    setUnitSystem(system);
+    localStorage.setItem('cucinapp_units', system);
+  };
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,19 +118,19 @@ export default function App() {
   useEffect(() => {
     navigationStateRef.current = {
       cookingSession,
-      showBackupModal,
+      showSettingsModal,
       showFridgeModal,
       editingRecipe,
       selectedRecipe,
       activeTab
     };
-  }, [cookingSession, showBackupModal, showFridgeModal, editingRecipe, selectedRecipe, activeTab]);
+  }, [cookingSession, showSettingsModal, showFridgeModal, editingRecipe, selectedRecipe, activeTab]);
 
   useEffect(() => {
     const handlePopState = () => {
       const {
         cookingSession: cs,
-        showBackupModal: sbm,
+        showSettingsModal: ssm,
         showFridgeModal: sfm,
         editingRecipe: er,
         selectedRecipe: sr,
@@ -130,8 +140,8 @@ export default function App() {
       // Close topmost layer first
       if (cs) {
         setCookingSession(null);
-      } else if (sbm) {
-        setShowBackupModal(false);
+      } else if (ssm) {
+        setShowSettingsModal(false);
       } else if (sfm) {
         setShowFridgeModal(false);
       } else if (er) {
@@ -182,9 +192,9 @@ export default function App() {
     navigateToView('fridge');
   };
 
-  const handleOpenBackup = () => {
-    setShowBackupModal(true);
-    navigateToView('backup');
+  const handleOpenSettings = () => {
+    setShowSettingsModal(true);
+    navigateToView('settings');
   };
 
   // Filtered recipes
@@ -340,11 +350,9 @@ export default function App() {
     <div className="app-container">
       {/* Top Navbar */}
       <Navbar
-        theme={theme}
-        onToggleTheme={toggleTheme}
         onOpenNewRecipe={handleOpenNewRecipe}
-        onOpenBackup={handleOpenBackup}
         onOpenFridge={handleOpenFridge}
+        onOpenSettings={handleOpenSettings}
       />
 
       {/* Main View Switcher */}
@@ -365,6 +373,7 @@ export default function App() {
           /* Recipe Detail View */
           <RecipeDetail
             recipe={selectedRecipe}
+            unitSystem={unitSystem}
             onBack={() => closeCurrentView(() => setSelectedRecipe(null))}
             onEdit={handleEditRecipe}
             onDelete={handleDeleteRecipe}
@@ -492,6 +501,7 @@ export default function App() {
         <CookModeModal
           recipe={cookingSession.recipe}
           servings={cookingSession.servings}
+          unitSystem={unitSystem}
           onClose={() => closeCurrentView(() => setCookingSession(null))}
         />
       )}
@@ -505,10 +515,14 @@ export default function App() {
         />
       )}
 
-      {/* Backup Modal */}
-      <BackupModal
-        isOpen={showBackupModal}
-        onClose={() => closeCurrentView(() => setShowBackupModal(false))}
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => closeCurrentView(() => setShowSettingsModal(false))}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        unitSystem={unitSystem}
+        onChangeUnitSystem={handleUnitSystemChange}
         onDataReloaded={loadData}
       />
 

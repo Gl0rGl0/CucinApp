@@ -1,12 +1,10 @@
 import React from 'react';
-import { ChefHat, Sun, Moon, Download, Plus, Sparkles } from 'lucide-react';
+import { ChefHat, Plus, Sparkles, Settings } from 'lucide-react';
 
 export function Navbar({
-  theme,
-  onToggleTheme,
   onOpenNewRecipe,
-  onOpenBackup,
-  onOpenFridge
+  onOpenFridge,
+  onOpenSettings
 }) {
   return (
     <header className="navbar-container">
@@ -18,14 +16,13 @@ export function Navbar({
           <div>
             <div className="logo-title">
               CucinApp
-              <span className="logo-version">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.2.1'}</span>
+              <span className="logo-version">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.3.0'}</span>
             </div>
             <div className="logo-subtitle">Il tuo ricettario</div>
           </div>
         </div>
 
         <div className="navbar-actions">
-
           <button
             className="nav-btn-icon hide-on-mobile"
             onClick={onOpenFridge}
@@ -36,29 +33,20 @@ export function Navbar({
           </button>
 
           <button
-            className="nav-btn-icon"
-            onClick={onOpenBackup}
-            title="Backup e Ripristino"
-          >
-            <Download size={18} />
-            <span className="nav-btn-label hide-on-mobile">Backup</span>
-          </button>
-
-          <button
-            className="nav-btn-icon"
-            onClick={onToggleTheme}
-            title={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}
-            aria-label="Cambia tema"
-          >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-
-          <button
             className="btn-primary hide-on-mobile"
             onClick={onOpenNewRecipe}
           >
             <Plus size={18} />
             <span>Nuova Ricetta</span>
+          </button>
+
+          <button
+            className="nav-btn-icon btn-square"
+            onClick={onOpenSettings}
+            title="Impostazioni"
+            aria-label="Apri impostazioni"
+          >
+            <Settings size={20} />
           </button>
         </div>
       </div>

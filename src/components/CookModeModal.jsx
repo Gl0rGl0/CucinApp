@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   X, ChevronLeft, ChevronRight, Check, Play, Pause, RotateCcw,
-  Timer, Lock, Sparkles, ChefHat, Eye, EyeOff, AlertCircle, Plus
+  Timer, Lock, Sparkles, Eye, EyeOff, AlertCircle, Plus
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { requestWakeLock, releaseWakeLock, setupWakeLockAutoRenew } from '../services/wakeLock';
 import { playTimerAlarm, playStepDing, triggerHaptic, stopHaptic } from '../services/sound';
-import { formatScaledAmount } from '../utils/scaler';
+import { formatScaledAmount, convertUnitAndAmount } from '../utils/scaler';
 
-export function CookModeModal({ recipe, servings, onClose }) {
+export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState({});
   const [showIngredientsDrawer, setShowIngredientsDrawer] = useState(false);
@@ -57,28 +57,61 @@ export function CookModeModal({ recipe, servings, onClose }) {
     }
   }, [currentStepIndex, currentStep.timerMinutes]);
 
-  // Timer countdown ticker
+  const timerTargetEndRef = useRef(null);
+
+  // Timer countdown ticker with Date.now() timestamp calculation (resilient to WhatsApp / backgrounding)
   useEffect(() => {
-    if (isTimerRunning && timerSecondsLeft > 0) {
-      timerIntervalRef.current = setInterval(() => {
-        setTimerSecondsLeft(prev => {
-          if (prev <= 1) {
-            clearInterval(timerIntervalRef.current);
-            setIsTimerRunning(false);
-            setTimerAlarmRinging(true);
-            playTimerAlarm();
-            triggerHaptic('alarm');
-            return 0;
+    if (isTimerRunning) {
+      if (!timerTargetEndRef.current) {
+        timerTargetEndRef.current = Date.now() + timerSecondsLeft * 1000;
+      }
+
+      const checkTime = () => {
+        if (!timerTargetEndRef.current) return;
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((timerTargetEndRef.current - now) / 1000));
+        setTimerSecondsLeft(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(timerIntervalRef.current);
+          setIsTimerRunning(false);
+          setTimerAlarmRinging(true);
+          playTimerAlarm();
+          triggerHaptic('alarm');
+          timerTargetEndRef.current = null;
+
+          // If phone was in background / screen off, show system notification
+          if (document.hidden && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+              new Notification('⏱️ CucinApp - Timer Completato!', {
+                body: `Tempo di cottura scaduto per "${recipe.title}"!`,
+                icon: '/pwa-192x192.png'
+              });
+            } catch {
+              // Ignore
+            }
           }
-          return prev - 1;
-        });
-      }, 1000);
+        }
+      };
+
+      timerIntervalRef.current = setInterval(checkTime, 1000);
+
+      // Instantly sync when user returns to CucinApp from WhatsApp or other apps
+      const handleVisibilityChange = () => {
+        if (!document.hidden && isTimerRunning) {
+          checkTime();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      return () => {
+        clearInterval(timerIntervalRef.current);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
     } else {
       clearInterval(timerIntervalRef.current);
     }
-
-    return () => clearInterval(timerIntervalRef.current);
-  }, [isTimerRunning, timerSecondsLeft]);
+  }, [isTimerRunning, recipe.title]);
 
   const toggleTimer = () => {
     if (timerAlarmRinging) {
@@ -86,11 +119,18 @@ export function CookModeModal({ recipe, servings, onClose }) {
       setTimerAlarmRinging(false);
       return;
     }
-    setIsTimerRunning(prev => !prev);
+    if (!isTimerRunning) {
+      timerTargetEndRef.current = Date.now() + timerSecondsLeft * 1000;
+      setIsTimerRunning(true);
+    } else {
+      timerTargetEndRef.current = null;
+      setIsTimerRunning(false);
+    }
   };
 
   const resetTimer = () => {
     clearInterval(timerIntervalRef.current);
+    timerTargetEndRef.current = null;
     setIsTimerRunning(false);
     stopHaptic();
     setTimerAlarmRinging(false);
@@ -99,6 +139,9 @@ export function CookModeModal({ recipe, servings, onClose }) {
 
   const addExtraMinute = (extraSec = 60) => {
     setTimerSecondsLeft(prev => prev + extraSec);
+    if (timerTargetEndRef.current) {
+      timerTargetEndRef.current += extraSec * 1000;
+    }
   };
 
   const toggleStepDone = (idx) => {
@@ -198,14 +241,18 @@ export function CookModeModal({ recipe, servings, onClose }) {
               </button>
             </div>
             <ul className="drawer-ingredients-list">
-              {recipe.ingredients?.map((ing, idx) => (
-                <li key={idx} className="drawer-ingredient-item">
-                  <span className="drawer-ing-qty">
-                    {formatScaledAmount(ing.amount, recipe.servings || 4, servings)} {ing.unit}
-                  </span>
-                  <span className="drawer-ing-name">{ing.name}</span>
-                </li>
-              ))}
+              {recipe.ingredients?.map((ing, idx) => {
+                const scaledAmount = formatScaledAmount(ing.amount, recipe.servings || 4, servings);
+                const converted = convertUnitAndAmount(scaledAmount, ing.unit, unitSystem);
+                return (
+                  <li key={idx} className="drawer-ingredient-item">
+                    <span className="drawer-ing-qty">
+                      {converted.amount} {converted.unit}
+                    </span>
+                    <span className="drawer-ing-name">{ing.name}</span>
+                  </li>
+                );
+              })}
             </ul>
           </aside>
         )}

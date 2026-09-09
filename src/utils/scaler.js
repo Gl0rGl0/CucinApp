@@ -50,3 +50,58 @@ function formatNumber(val) {
   // Otherwise 1 decimal place
   return rounded.toFixed(1).replace('.0', '');
 }
+
+/**
+ * Converts metric units to imperial units if unitSystem is 'imperial'
+ */
+export function convertUnitAndAmount(amount, unit, unitSystem = 'metric') {
+  if (!amount || unitSystem !== 'imperial' || !unit) {
+    return { amount, unit };
+  }
+
+  const num = typeof amount === 'number' ? amount : parseFloat(amount);
+  if (isNaN(num)) {
+    return { amount, unit };
+  }
+
+  const cleanUnit = unit.toLowerCase().trim();
+
+  // grams -> oz (1 oz ≈ 28.35 g)
+  if (cleanUnit === 'g' || cleanUnit === 'gr' || cleanUnit === 'grammi') {
+    const oz = num / 28.35;
+    return {
+      amount: formatNumber(oz),
+      unit: 'oz'
+    };
+  }
+
+  // kg -> lbs (1 lb ≈ 0.4536 kg)
+  if (cleanUnit === 'kg' || cleanUnit === 'chili') {
+    const lbs = num * 2.20462;
+    return {
+      amount: formatNumber(lbs),
+      unit: 'lb'
+    };
+  }
+
+  // ml -> fl oz (1 fl oz ≈ 29.57 ml)
+  if (cleanUnit === 'ml' || cleanUnit === 'millilitri') {
+    const flOz = num / 29.57;
+    return {
+      amount: formatNumber(flOz),
+      unit: 'fl oz'
+    };
+  }
+
+  // l / lt -> cups (1 cup ≈ 0.236 l)
+  if (cleanUnit === 'l' || cleanUnit === 'lt' || cleanUnit === 'litri') {
+    const cups = num * 4.22675;
+    return {
+      amount: formatNumber(cups),
+      unit: 'cups'
+    };
+  }
+
+  return { amount, unit };
+}
+

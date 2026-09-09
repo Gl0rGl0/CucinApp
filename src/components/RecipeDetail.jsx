@@ -4,10 +4,11 @@ import {
   Play, ShoppingBag, Plus, Minus, Check, Timer, MessageSquare,
   AlertCircle, ChefHat
 } from 'lucide-react';
-import { formatScaledAmount } from '../utils/scaler';
+import { formatScaledAmount, convertUnitAndAmount } from '../utils/scaler';
 
 export function RecipeDetail({
   recipe,
+  unitSystem = 'metric',
   onBack,
   onEdit,
   onDelete,
@@ -45,12 +46,16 @@ export function RecipeDetail({
   };
 
   const handleAddIngredientsToShop = () => {
-    const scaledItems = recipe.ingredients.map((ing) => ({
-      name: ing.name,
-      amount: formatScaledAmount(ing.amount, baseServings, servings),
-      unit: ing.unit || '',
-      recipeTitle: recipe.title
-    }));
+    const scaledItems = recipe.ingredients.map((ing) => {
+      const scaledAmount = formatScaledAmount(ing.amount, baseServings, servings);
+      const converted = convertUnitAndAmount(scaledAmount, ing.unit, unitSystem);
+      return {
+        name: ing.name,
+        amount: converted.amount,
+        unit: converted.unit || '',
+        recipeTitle: recipe.title
+      };
+    });
 
     onAddToShopping(scaledItems, recipe.title);
     setAddedToShopAlert(true);
@@ -218,6 +223,7 @@ export function RecipeDetail({
           <ul className="ingredients-list">
             {recipe.ingredients?.map((ing, idx) => {
               const scaledAmount = formatScaledAmount(ing.amount, baseServings, servings);
+              const converted = convertUnitAndAmount(scaledAmount, ing.unit, unitSystem);
               const isChecked = !!checkedIngredients[idx];
 
               return (
@@ -230,7 +236,7 @@ export function RecipeDetail({
                     {isChecked && <Check size={14} />}
                   </div>
                   <span className="ingredient-qty">
-                    {scaledAmount} {ing.unit}
+                    {converted.amount} {converted.unit}
                   </span>
                   <span className="ingredient-name">{ing.name}</span>
                 </li>
