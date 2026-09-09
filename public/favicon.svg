@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="cucinapp-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+  <!-- Background rounded rect -->
+  <rect width="100" height="100" rx="26" fill="url(#cucinapp-grad)" />
+  
+  <!-- Chef Hat Icon -->
+  <path d="M50 22 C42 22 36 27 35 34 C31 34 27 38 27 43 C27 48 30 52 34 53 C34 54 34 58 35 62 L65 62 C66 58 66 54 66 53 C70 52 73 48 73 43 C73 38 69 34 65 34 C64 27 58 22 50 22 Z" fill="#ffffff" />
+  
+  <!-- Hat brim detail -->
+  <rect x="33" y="65" width="34" height="6" rx="3" fill="#ffffff" />
+  <circle cx="50" cy="68" r="1.5" fill="#f97316" />
+
+  <!-- Steam curves -->
+  <path d="M43 17 C41 14 43 11 41 8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8" />
+  <path d="M50 15 C48 12 50 9 48 6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9" />
+  <path d="M57 17 C55 14 57 11 55 8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8" />
+</svg>

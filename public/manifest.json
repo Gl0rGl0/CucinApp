@@ -1,0 +1,20 @@
+{
+  "name": "CucinApp - Ricettario e Timer da Cucina",
+  "short_name": "CucinApp",
+  "description": "Salva, organizza e cucina le tue ricette con modalità a schermo intero, timer, ricalcolo porzioni e lista spesa offline.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "lifestyle", "utilities"]
+}
