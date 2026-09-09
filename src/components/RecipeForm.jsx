@@ -42,7 +42,7 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
   const handleAddIngredient = () => {
     setIngredients(prev => [
       ...prev,
-      { id: 'ing-' + Date.now(), name: '', amount: '', unit: 'g' }
+      { id: 'ing-' + Date.now(), name: '', amount: '', unit: '' }
     ]);
   };
 
@@ -228,7 +228,7 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
                 className="checkbox-native"
               />
               <span className="checkbox-toggle-text">
-                🌾 Ricetta Senza Glutine (Gluten-Free)
+                🌾 Ricetta Senza Glutine
               </span>
             </label>
           </div>
@@ -375,21 +375,21 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
               <div key={ing.id || idx} className="ingredient-row">
                 <input
                   type="text"
-                  placeholder="Dose (es. 250)"
+                  placeholder="Dose"
                   value={ing.amount}
                   onChange={(e) => handleUpdateIngredient(idx, 'amount', e.target.value)}
                   className="input-qty"
                 />
                 <input
                   type="text"
-                  placeholder="Unità (g, ml, q.b.)"
+                  placeholder="Unità"
                   value={ing.unit}
                   onChange={(e) => handleUpdateIngredient(idx, 'unit', e.target.value)}
                   className="input-unit"
                 />
                 <input
                   type="text"
-                  placeholder="Nome ingrediente (es. Farina 00)"
+                  placeholder="Ingrediente (es. Farina)"
                   value={ing.name}
                   onChange={(e) => handleUpdateIngredient(idx, 'name', e.target.value)}
                   className="input-name"
@@ -412,14 +412,6 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
         <div className="form-card">
           <div className="card-header-flex">
             <h3 className="form-section-title">Procedimento Step-by-Step ({steps.length})</h3>
-            <button
-              type="button"
-              className="btn-secondary btn-sm"
-              onClick={handleAddStep}
-            >
-              <Plus size={16} />
-              <span>Aggiungi Passaggio</span>
-            </button>
           </div>
 
           <div className="steps-form-list">
@@ -471,6 +463,15 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
               </div>
             ))}
           </div>
+
+          <button
+            type="button"
+            className="btn-secondary btn-add-step mt-3"
+            onClick={handleAddStep}
+          >
+            <Plus size={18} />
+            <span>Aggiungi Passaggio</span>
+          </button>
         </div>
 
         {/* Section 5: Notes */}

@@ -55,9 +55,6 @@ export default function App() {
     return localStorage.getItem('cucinapp_theme') || 'dark';
   });
 
-  // PWA install prompt
-  const [installPrompt, setInstallPrompt] = useState(null);
-
   // Apply theme to document
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -66,28 +63,6 @@ export default function App() {
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  // PWA install event listener
-  useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstallApp = async () => {
-    if (!installPrompt) {
-      alert('Per installare l\'app su Android, tocca i tre puntini del browser in alto a destra e seleziona "Aggiungi a schermata Home" o "Installa app"!');
-      return;
-    }
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setInstallPrompt(null);
-    }
   };
 
   // Load database on start
@@ -259,8 +234,6 @@ export default function App() {
         }}
         onOpenBackup={() => setShowBackupModal(true)}
         onOpenFridge={() => setShowFridgeModal(true)}
-        installPrompt={installPrompt}
-        onInstallApp={handleInstallApp}
       />
 
       {/* Main View Switcher */}

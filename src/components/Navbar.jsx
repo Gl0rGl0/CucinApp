@@ -1,14 +1,12 @@
 import React from 'react';
-import { ChefHat, Sun, Moon, Download, Upload, Plus, Sparkles, Smartphone } from 'lucide-react';
+import { ChefHat, Sun, Moon, Download, Plus, Sparkles } from 'lucide-react';
 
 export function Navbar({
   theme,
   onToggleTheme,
   onOpenNewRecipe,
   onOpenBackup,
-  onOpenFridge,
-  installPrompt,
-  onInstallApp
+  onOpenFridge
 }) {
   return (
     <header className="navbar-container">
@@ -20,31 +18,21 @@ export function Navbar({
           <div>
             <div className="logo-title">
               CucinApp
-              <span className="logo-version">v1.1</span>
+              <span className="logo-version">v1.2.0</span>
             </div>
             <div className="logo-subtitle">Il tuo ricettario</div>
           </div>
         </div>
 
         <div className="navbar-actions">
-          {installPrompt && (
-            <button
-              className="btn-install"
-              onClick={onInstallApp}
-              title="Installa CucinApp su Android o PC"
-            >
-              <Smartphone size={16} />
-              <span className="hide-on-mobile">Installa App</span>
-            </button>
-          )}
 
           <button
-            className="nav-btn-icon"
+            className="nav-btn-icon hide-on-mobile"
             onClick={onOpenFridge}
             title="Svuotafrigo: cerca per ingredienti"
           >
             <Sparkles size={18} />
-            <span className="nav-btn-label hide-on-mobile">Svuotafrigo</span>
+            <span className="nav-btn-label">Svuotafrigo</span>
           </button>
 
           <button

@@ -1,8 +1,39 @@
 import { openDB } from 'idb';
-import { INITIAL_RECIPES } from './sampleRecipes';
+import { DEFAULT_RECIPES } from './defaultRecipes';
 
 const DB_NAME = 'cucinapp_db';
 const DB_VERSION = 1;
+
+/**
+ * Generates a standard UUID v4
+ */
+export function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for older browsers or non-secure contexts
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
+ * Creates a clean URL-friendly slug from recipe title
+ */
+function slugify(text) {
+  if (!text) return 'ricetta';
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 30) || 'ricetta';
+}
 
 /**
  * Initialize and upgrade the IndexedDB database
@@ -15,6 +46,7 @@ export async function getDB() {
         const recipeStore = db.createObjectStore('recipes', { keyPath: 'id' });
         recipeStore.createIndex('category', 'category', { unique: false });
         recipeStore.createIndex('isFavorite', 'isFavorite', { unique: false });
+        recipeStore.createIndex('isDeleted', 'isDeleted', { unique: false });
         recipeStore.createIndex('createdAt', 'createdAt', { unique: false });
       }
 
@@ -41,8 +73,10 @@ const OBSOLETE_TEMPLATE_IDS = [
 ];
 
 /**
- * Ensures starter recipes are seeded only once.
- * Deleted recipes will NEVER be re-added on page reload or app restart.
+ * Syncs defaultRecipes into IndexedDB.
+ * - New default recipes added in defaultRecipes.js are automatically inserted.
+ * - Soft-deleted recipes (isDeleted === true) will NEVER be resurrected.
+ * - Existing default recipes get updated ingredients/steps without losing user favorites or custom notes.
  */
 export async function initializeDatabase() {
   const db = await getDB();
@@ -54,58 +88,78 @@ export async function initializeDatabase() {
   }
   await txPurge.done;
 
-  // 2. Seed the 8 curated recipes from ricette.md only once
-  const seedFlag = await db.get('settings', 'catalog_seeded_v2');
-  if (!seedFlag) {
-    const txSeed = db.transaction(['recipes', 'settings'], 'readwrite');
-    for (const recipe of INITIAL_RECIPES) {
-      const existing = await txSeed.objectStore('recipes').get(recipe.id);
-      if (!existing) {
-        await txSeed.objectStore('recipes').put(recipe);
+  // 2. Synchronize default recipes
+  const txSync = db.transaction('recipes', 'readwrite');
+  for (const recipe of DEFAULT_RECIPES) {
+    const existing = await txSync.store.get(recipe.id);
+    if (!existing) {
+      // Brand new default recipe: add it as active
+      await txSync.store.put({
+        ...recipe,
+        isDefault: true,
+        isDeleted: false
+      });
+    } else if (existing.isDeleted) {
+      // User has explicitly deleted this recipe: NEVER un-delete it!
+      continue;
+    } else if (existing.isDefault) {
+      // Keep steps, ingredients and timing updated from defaultRecipes.js
+      existing.title = recipe.title;
+      existing.category = recipe.category;
+      existing.prepTime = recipe.prepTime;
+      existing.cookTime = recipe.cookTime;
+      existing.servings = recipe.servings;
+      existing.difficulty = recipe.difficulty;
+      existing.isGlutenFree = recipe.isGlutenFree;
+      existing.ingredients = recipe.ingredients;
+      existing.steps = recipe.steps;
+      existing.sourceName = recipe.sourceName;
+      if (recipe.imageUrl && !existing.imageUrl) {
+        existing.imageUrl = recipe.imageUrl;
       }
-    }
-    // Record that seeding was completed: deleted recipes will NEVER re-appear
-    await txSeed.objectStore('settings').put({ key: 'catalog_seeded_v2', value: true });
-    await txSeed.done;
-  }
-
-  // 3. Sync clean titles and notes for existing recipes (without re-adding deleted ones)
-  const cleanedFlag = await db.get('settings', 'catalog_cleaned_v3');
-  if (!cleanedFlag) {
-    const txClean = db.transaction(['recipes', 'settings'], 'readwrite');
-    for (const sample of INITIAL_RECIPES) {
-      const existing = await txClean.objectStore('recipes').get(sample.id);
-      if (existing) {
-        existing.title = sample.title;
-        existing.personalNotes = sample.personalNotes;
-        existing.ingredients = sample.ingredients;
-        existing.steps = sample.steps;
-        existing.sourceName = sample.sourceName;
-        await txClean.objectStore('recipes').put(existing);
+      if (!existing.userCustomNotes) {
+        existing.personalNotes = recipe.personalNotes;
       }
+      await txSync.store.put(existing);
     }
-    await txClean.objectStore('settings').put({ key: 'catalog_cleaned_v3', value: true });
-    await txClean.done;
   }
+  await txSync.done;
 }
 
 // ------------------- RECIPES CRUD -------------------
 
+/**
+ * Retrieves all active (non-deleted) recipes
+ */
 export async function getAllRecipes() {
   const db = await getDB();
-  return db.getAll('recipes');
+  const all = await db.getAll('recipes');
+  return all.filter((r) => !r.isDeleted && r.title);
 }
 
+/**
+ * Retrieves a single active recipe by ID
+ */
 export async function getRecipeById(id) {
   const db = await getDB();
-  return db.get('recipes', id);
+  const recipe = await db.get('recipes', id);
+  return recipe && !recipe.isDeleted ? recipe : null;
 }
 
+/**
+ * Saves a recipe.
+ * For new recipes, creates a slug + UUID id (e.g. recipe_pasta-al-pomodoro_8f93a1c2-...)
+ * ensuring no collisions even with hundreds of identical titles.
+ */
 export async function saveRecipe(recipe) {
   const db = await getDB();
+  const slug = slugify(recipe.title);
+  const id = recipe.id || `recipe_${slug}_${generateUUID()}`;
+
   const toSave = {
     ...recipe,
-    id: recipe.id || 'recipe_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    id,
+    isDeleted: false,
     createdAt: recipe.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -113,9 +167,27 @@ export async function saveRecipe(recipe) {
   return toSave;
 }
 
+/**
+ * Soft delete: marks the recipe as isDeleted: true.
+ * It completely disappears from the UI and queries, and prevents defaultRecipes
+ * from resurrecting it upon future reloads.
+ */
 export async function deleteRecipe(id) {
   const db = await getDB();
-  return db.delete('recipes', id);
+  const recipe = await db.get('recipes', id);
+  if (recipe) {
+    recipe.isDeleted = true;
+    recipe.deletedAt = new Date().toISOString();
+    await db.put('recipes', recipe);
+  } else {
+    // Tombstone record to ensure the ID is never seeded
+    await db.put('recipes', {
+      id,
+      isDeleted: true,
+      deletedAt: new Date().toISOString()
+    });
+  }
+  return true;
 }
 
 export async function toggleFavorite(id) {
@@ -134,6 +206,7 @@ export async function updateRecipeNotes(id, personalNotes) {
   const recipe = await db.get('recipes', id);
   if (recipe) {
     recipe.personalNotes = personalNotes;
+    recipe.userCustomNotes = true;
     recipe.updatedAt = new Date().toISOString();
     await db.put('recipes', recipe);
     return recipe;
@@ -151,7 +224,7 @@ export async function getShoppingList() {
 export async function addShoppingItem(item) {
   const db = await getDB();
   const toAdd = {
-    id: 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    id: 'item_' + generateUUID(),
     name: item.name.trim(),
     amount: item.amount || '',
     unit: item.unit || '',
@@ -169,7 +242,7 @@ export async function addMultipleToShoppingList(items, recipeTitle = '') {
   const added = [];
   for (const item of items) {
     const toAdd = {
-      id: 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      id: 'item_' + generateUUID(),
       name: item.name.trim(),
       amount: item.amount || '',
       unit: item.unit || '',
@@ -216,11 +289,12 @@ export async function clearCheckedShoppingItems() {
 
 export async function exportAllData() {
   const db = await getDB();
-  const recipes = await db.getAll('recipes');
+  const allRecipes = await db.getAll('recipes');
+  const recipes = allRecipes.filter((r) => !r.isDeleted && r.title);
   const shoppingList = await db.getAll('shoppingList');
   return {
     app: 'CucinApp',
-    version: '1.1.0',
+    version: '1.2.0',
     exportDate: new Date().toISOString(),
     recipes,
     shoppingList
@@ -235,10 +309,13 @@ export async function importData(importedJson) {
   const db = await getDB();
   const tx = db.transaction(['recipes', 'shoppingList'], 'readwrite');
 
-  // Import recipes (upsert)
+  // Import recipes (upsert as active)
   for (const recipe of importedJson.recipes) {
     if (recipe.id && recipe.title) {
-      await tx.objectStore('recipes').put(recipe);
+      await tx.objectStore('recipes').put({
+        ...recipe,
+        isDeleted: false
+      });
     }
   }
 

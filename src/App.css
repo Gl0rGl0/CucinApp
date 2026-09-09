@@ -1491,18 +1491,50 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  width: 100%;
 }
 
 .input-qty {
-  width: 90px;
+  width: 80px;
+  flex-shrink: 0;
 }
 
 .input-unit {
-  width: 90px;
+  width: 80px;
+  flex-shrink: 0;
 }
 
 .input-name {
   flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .ingredient-row {
+    gap: 6px;
+  }
+
+  .input-qty {
+    width: 62px;
+    padding: 8px 6px;
+    font-size: 0.85rem;
+  }
+
+  .input-unit {
+    width: 58px;
+    padding: 8px 6px;
+    font-size: 0.85rem;
+  }
+
+  .input-name {
+    padding: 8px 8px;
+    font-size: 0.85rem;
+    min-width: 0;
+  }
+
+  .ingredient-row .btn-delete-row {
+    flex-shrink: 0;
+  }
 }
 
 /* Steps form cards */
@@ -1567,6 +1599,28 @@
 .input-tip {
   flex: 1;
   font-size: 0.85rem;
+}
+
+.btn-add-step {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-style: dashed;
+  border-width: 1.5px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.btn-add-step:hover {
+  border-style: solid;
+  border-color: var(--primary);
+  color: var(--primary);
+  background-color: var(--bg-surface-elevated);
 }
 
 .image-input-choice {
