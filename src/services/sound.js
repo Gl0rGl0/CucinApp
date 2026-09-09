@@ -87,3 +87,38 @@ export function playStepDing() {
   osc.start(now);
   osc.stop(now + 0.2);
 }
+
+/**
+ * Trigger subtle physical vibration on mobile devices
+ */
+export function triggerHaptic(type = 'light') {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      if (type === 'light') {
+        navigator.vibrate(25);
+      } else if (type === 'medium') {
+        navigator.vibrate(45);
+      } else if (type === 'success') {
+        navigator.vibrate([40, 60, 80]);
+      } else if (type === 'alarm') {
+        navigator.vibrate([500, 200, 500, 200, 800]);
+      }
+    } catch {
+      // Ignore vibration errors if blocked
+    }
+  }
+}
+
+/**
+ * Stop any ongoing vibration
+ */
+export function stopHaptic() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(0);
+    } catch {
+      // Ignore
+    }
+  }
+}
+

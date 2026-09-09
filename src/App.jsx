@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './App.css';
 import {
   initializeDatabase,
@@ -85,6 +85,108 @@ export default function App() {
     loadData();
   }, []);
 
+  // Handle App Shortcuts from home screen launcher (/?action=new, /?tab=shopping, /?action=fridge)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    const actionParam = params.get('action');
+
+    if (tabParam === 'shopping') {
+      setActiveTab('shopping');
+      window.history.replaceState({ cucinappView: 'shopping' }, '', '/');
+    } else if (actionParam === 'new') {
+      setEditingRecipe({});
+      window.history.replaceState({ cucinappView: 'edit' }, '', '/');
+    } else if (actionParam === 'fridge') {
+      setShowFridgeModal(true);
+      window.history.replaceState({ cucinappView: 'fridge' }, '', '/');
+    }
+  }, []);
+
+  // Gesture Back Navigation for Android (popstate listener)
+  const navigationStateRef = useRef({});
+  useEffect(() => {
+    navigationStateRef.current = {
+      cookingSession,
+      showBackupModal,
+      showFridgeModal,
+      editingRecipe,
+      selectedRecipe,
+      activeTab
+    };
+  }, [cookingSession, showBackupModal, showFridgeModal, editingRecipe, selectedRecipe, activeTab]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const {
+        cookingSession: cs,
+        showBackupModal: sbm,
+        showFridgeModal: sfm,
+        editingRecipe: er,
+        selectedRecipe: sr,
+        activeTab: at
+      } = navigationStateRef.current;
+
+      // Close topmost layer first
+      if (cs) {
+        setCookingSession(null);
+      } else if (sbm) {
+        setShowBackupModal(false);
+      } else if (sfm) {
+        setShowFridgeModal(false);
+      } else if (er) {
+        setEditingRecipe(null);
+      } else if (sr) {
+        setSelectedRecipe(null);
+      } else if (at === 'shopping') {
+        setActiveTab('recipes');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Navigation helpers
+  const navigateToView = (viewName) => {
+    window.history.pushState({ cucinappView: viewName }, '');
+  };
+
+  const closeCurrentView = (fallback) => {
+    if (window.history.state?.cucinappView) {
+      window.history.back();
+    } else {
+      fallback();
+    }
+  };
+
+  const handleOpenRecipeDetail = (rec) => {
+    setSelectedRecipe(rec);
+    navigateToView('recipe');
+  };
+
+  const handleOpenNewRecipe = () => {
+    setSelectedRecipe(null);
+    setEditingRecipe({});
+    setActiveTab('recipes');
+    navigateToView('edit');
+  };
+
+  const handleEditRecipe = (rec) => {
+    setEditingRecipe(rec);
+    navigateToView('edit');
+  };
+
+  const handleOpenFridge = () => {
+    setShowFridgeModal(true);
+    navigateToView('fridge');
+  };
+
+  const handleOpenBackup = () => {
+    setShowBackupModal(true);
+    navigateToView('backup');
+  };
+
   // Filtered recipes
   const filteredRecipes = useMemo(() => {
     return recipes.filter(recipe => {
@@ -137,13 +239,14 @@ export default function App() {
     setEditingRecipe(null);
     setSelectedRecipe(saved);
     setActiveTab('recipes');
+    window.history.replaceState({ cucinappView: 'recipe' }, '');
   };
 
   const handleDeleteRecipe = async (id) => {
     await deleteRecipe(id);
     setRecipes(prev => prev.filter(r => r.id !== id));
     if (selectedRecipe?.id === id) {
-      setSelectedRecipe(null);
+      closeCurrentView(() => setSelectedRecipe(null));
     }
   };
 
@@ -210,18 +313,22 @@ export default function App() {
       recipe,
       servings: servings || recipe.servings || 4
     });
+    navigateToView('cook');
   };
 
   // Bottom nav tab change
   const handleSelectTab = (tab) => {
     if (tab === 'new') {
-      setSelectedRecipe(null);
-      setEditingRecipe({});
-      setActiveTab('recipes');
+      handleOpenNewRecipe();
     } else if (tab === 'fridge') {
-      setShowFridgeModal(true);
+      handleOpenFridge();
+    } else if (tab === 'shopping') {
+      setActiveTab('shopping');
+      setSelectedRecipe(null);
+      setEditingRecipe(null);
+      navigateToView('shopping');
     } else {
-      setActiveTab(tab);
+      setActiveTab('recipes');
       setSelectedRecipe(null);
       setEditingRecipe(null);
     }
@@ -235,13 +342,9 @@ export default function App() {
       <Navbar
         theme={theme}
         onToggleTheme={toggleTheme}
-        onOpenNewRecipe={() => {
-          setSelectedRecipe(null);
-          setEditingRecipe({});
-          setActiveTab('recipes');
-        }}
-        onOpenBackup={() => setShowBackupModal(true)}
-        onOpenFridge={() => setShowFridgeModal(true)}
+        onOpenNewRecipe={handleOpenNewRecipe}
+        onOpenBackup={handleOpenBackup}
+        onOpenFridge={handleOpenFridge}
       />
 
       {/* Main View Switcher */}
@@ -256,14 +359,14 @@ export default function App() {
           <RecipeForm
             initialRecipe={editingRecipe.id ? editingRecipe : null}
             onSave={handleSaveRecipe}
-            onCancel={() => setEditingRecipe(null)}
+            onCancel={() => closeCurrentView(() => setEditingRecipe(null))}
           />
         ) : selectedRecipe ? (
           /* Recipe Detail View */
           <RecipeDetail
             recipe={selectedRecipe}
-            onBack={() => setSelectedRecipe(null)}
-            onEdit={(rec) => setEditingRecipe(rec)}
+            onBack={() => closeCurrentView(() => setSelectedRecipe(null))}
+            onEdit={handleEditRecipe}
             onDelete={handleDeleteRecipe}
             onToggleFavorite={handleToggleFavorite}
             onStartCook={handleStartCook}
@@ -361,7 +464,7 @@ export default function App() {
                 </p>
                 <button
                   className="btn-primary"
-                  onClick={() => setEditingRecipe({})}
+                  onClick={handleOpenNewRecipe}
                 >
                   <Plus size={18} />
                   <span>Crea una Ricetta</span>
@@ -373,7 +476,7 @@ export default function App() {
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
-                    onSelect={(rec) => setSelectedRecipe(rec)}
+                    onSelect={handleOpenRecipeDetail}
                     onToggleFavorite={handleToggleFavorite}
                     onStartCook={(rec) => handleStartCook(rec)}
                   />
@@ -389,7 +492,7 @@ export default function App() {
         <CookModeModal
           recipe={cookingSession.recipe}
           servings={cookingSession.servings}
-          onClose={() => setCookingSession(null)}
+          onClose={() => closeCurrentView(() => setCookingSession(null))}
         />
       )}
 
@@ -397,15 +500,15 @@ export default function App() {
       {showFridgeModal && (
         <FridgeFilterModal
           recipes={recipes}
-          onSelectRecipe={(rec) => setSelectedRecipe(rec)}
-          onClose={() => setShowFridgeModal(false)}
+          onSelectRecipe={handleOpenRecipeDetail}
+          onClose={() => closeCurrentView(() => setShowFridgeModal(false))}
         />
       )}
 
       {/* Backup Modal */}
       <BackupModal
         isOpen={showBackupModal}
-        onClose={() => setShowBackupModal(false)}
+        onClose={() => closeCurrentView(() => setShowBackupModal(false))}
         onDataReloaded={loadData}
       />
 

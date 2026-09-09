@@ -39,8 +39,8 @@
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
 
-  --header-height: 64px;
-  --bottom-nav-height: 68px;
+  --header-height: calc(64px + env(safe-area-inset-top, 0px));
+  --bottom-nav-height: calc(68px + env(safe-area-inset-bottom, 0px));
 }
 
 [data-theme="light"] {
@@ -80,6 +80,11 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  overscroll-behavior-y: none;
 }
 
 body {

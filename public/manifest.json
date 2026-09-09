@@ -43,5 +43,46 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["food", "lifestyle", "utilities"]
+  "categories": ["food", "lifestyle", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Nuova Ricetta",
+      "short_name": "Nuova",
+      "description": "Crea una nuova ricetta",
+      "url": "/?action=new",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Lista Spesa",
+      "short_name": "Spesa",
+      "description": "Vedi gli ingredienti da acquistare",
+      "url": "/?tab=shopping",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Svuotafrigo",
+      "short_name": "Svuotafrigo",
+      "description": "Trova cosa cucinare con i tuoi ingredienti",
+      "url": "/?action=fridge",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

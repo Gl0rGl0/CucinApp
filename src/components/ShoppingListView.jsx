@@ -3,6 +3,7 @@ import {
   ShoppingBag, Plus, Check, Trash2, Copy, CheckCheck, Share2,
   AlertCircle
 } from 'lucide-react';
+import { triggerHaptic } from '../services/sound';
 
 export function ShoppingListView({
   items = [],
@@ -19,6 +20,11 @@ export function ShoppingListView({
 
   const uncheckedItems = items.filter(i => !i.checked);
   const checkedItems = items.filter(i => i.checked);
+
+  const handleItemToggle = (id) => {
+    triggerHaptic('light');
+    onToggleItem(id);
+  };
 
   const handleAddManual = (e) => {
     e.preventDefault();
@@ -142,7 +148,7 @@ export function ShoppingListView({
               <h4 className="shopping-group-title">Da Comprare ({uncheckedItems.length})</h4>
               <ul className="shopping-items-list">
                 {uncheckedItems.map(item => (
-                  <li key={item.id} className="shopping-item-card" onClick={() => onToggleItem(item.id)}>
+                  <li key={item.id} className="shopping-item-card" onClick={() => handleItemToggle(item.id)}>
                     <div className="checkbox-custom">
                       {item.checked && <Check size={14} />}
                     </div>
@@ -182,7 +188,7 @@ export function ShoppingListView({
               </div>
               <ul className="shopping-items-list">
                 {checkedItems.map(item => (
-                  <li key={item.id} className="shopping-item-card item-checked" onClick={() => onToggleItem(item.id)}>
+                  <li key={item.id} className="shopping-item-card item-checked" onClick={() => handleItemToggle(item.id)}>
                     <div className="checkbox-custom active">
                       <Check size={14} />
                     </div>

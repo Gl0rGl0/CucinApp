@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { requestWakeLock, releaseWakeLock, setupWakeLockAutoRenew } from '../services/wakeLock';
-import { playTimerAlarm, playStepDing } from '../services/sound';
+import { playTimerAlarm, playStepDing, triggerHaptic, stopHaptic } from '../services/sound';
 import { formatScaledAmount } from '../utils/scaler';
 
 export function CookModeModal({ recipe, servings, onClose }) {
@@ -40,6 +40,7 @@ export function CookModeModal({ recipe, servings, onClose }) {
       active = false;
       cleanupRenew();
       releaseWakeLock();
+      stopHaptic();
     };
   }, []);
 
@@ -66,9 +67,7 @@ export function CookModeModal({ recipe, servings, onClose }) {
             setIsTimerRunning(false);
             setTimerAlarmRinging(true);
             playTimerAlarm();
-            if ('vibrate' in navigator) {
-              navigator.vibrate([400, 200, 400, 200, 600]);
-            }
+            triggerHaptic('alarm');
             return 0;
           }
           return prev - 1;
@@ -83,6 +82,7 @@ export function CookModeModal({ recipe, servings, onClose }) {
 
   const toggleTimer = () => {
     if (timerAlarmRinging) {
+      stopHaptic();
       setTimerAlarmRinging(false);
       return;
     }
@@ -92,6 +92,7 @@ export function CookModeModal({ recipe, servings, onClose }) {
   const resetTimer = () => {
     clearInterval(timerIntervalRef.current);
     setIsTimerRunning(false);
+    stopHaptic();
     setTimerAlarmRinging(false);
     setTimerSecondsLeft((currentStep.timerMinutes || 0) * 60);
   };
@@ -109,9 +110,11 @@ export function CookModeModal({ recipe, servings, onClose }) {
 
     if (isNowDone) {
       playStepDing();
+      triggerHaptic('light');
       // Check if all are done after this
       const willBeAllDone = steps.every((_, i) => (i === idx ? true : completedSteps[i]));
       if (willBeAllDone) {
+        triggerHaptic('success');
         triggerConfetti();
       } else if (currentStepIndex < steps.length - 1) {
         // Auto advance to next step after slight delay

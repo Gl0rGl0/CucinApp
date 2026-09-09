@@ -28,7 +28,7 @@
 .navbar-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: env(safe-area-inset-top, 0px) 16px 0 16px;
   height: var(--header-height);
   display: flex;
   align-items: center;
@@ -981,8 +981,8 @@
 }
 
 .cook-mode-header {
-  height: 68px;
-  padding: 0 16px;
+  height: calc(68px + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) 16px 0 16px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-surface);
   display: flex;
@@ -1341,13 +1341,13 @@
 
 /* Bottom Nav in Cook Mode */
 .cook-bottom-bar {
-  height: 72px;
+  height: calc(72px + env(safe-area-inset-bottom, 0px));
   background-color: var(--bg-surface);
   border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 16px env(safe-area-inset-bottom, 0px) 16px;
   position: sticky;
   bottom: 0;
   z-index: 10;

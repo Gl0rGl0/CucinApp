@@ -104,6 +104,19 @@ Il deploy è **completamente automatizzato via GitHub**:
 
 ## 📝 Registro Versioni (Changelog)
 
+### [1.3.0] - 2026-09-10
+* **Esperienza Mobile Nativa (TWA & Android):**
+  * **Navigazione Gesti Android (Gesture Back Navigation):** Collegamento dello storico del browser (`popstate`) a tutte le schermate e modali (dettaglio ricetta, form creazione ricetta, modalità cucina a schermo intero, svuotafrigo, backup e tab spesa). Il tasto "Indietro" o lo swipe laterale di Android chiude le viste aperte e torna al ricettario senza chiudere l'app.
+  * **Scorciatoie Rapide Icona Home (App Shortcuts):** Configurate scorciatoie nel `manifest.json` accessibili con tocco prolungato (long-press) sull'icona dell'app: *Nuova Ricetta*, *Lista della Spesa* e *Svuotafrigo*.
+  * **Feedback Aptico & Vibrazione (Haptic Feedback):** Vibrazione fisica ritmica del dispositivo al termine del timer di cottura e micro-feedback tattile alla spunta dei passaggi e degli articoli nella lista della spesa.
+  * **Supporto Safe Areas (Notch & Gesture Bar):** Configurato `viewport-fit=cover` e margini con `env(safe-area-inset-top)` ed `env(safe-area-inset-bottom)` per garantire spaziatura perfetta rispetto al foro fotocamera e alla barra gesti inferiore.
+  * **Disattivazione Pull-To-Refresh:** Applicato `overscroll-behavior-y: none` per eliminare ricaricamenti accidentali durante lo scorrimento delle ricette.
+* **Packaging APK & Cloudflare:**
+  * Configurato `assetlinks.json` in `public/.well-known/` con l'impronta SHA-256 della firma crittografica per l'esecuzione dell'APK a schermo intero senza barra del browser.
+  * Configurato `wrangler.json` per la distribuzione automatizzata su Cloudflare Workers con supporto SPA.
+
+---
+
 ### [1.2.0] - 2026-09-10
 * **Refactoring Catalogo Ricette:**
   * Ridenominato e ristrutturato `sampleRecipes.js` in `defaultRecipes.js`.
