@@ -33,24 +33,60 @@ export async function getDB() {
   });
 }
 
+const OBSOLETE_TEMPLATE_IDS = [
+  'recipe-carbonara-1',
+  'recipe-risotto-2',
+  'recipe-tiramisu-3',
+  'recipe-salmone-4'
+];
+
 /**
- * Ensures starter recipes and new recipes from the catalog exist in IndexedDB
+ * Ensures starter recipes are seeded only once.
+ * Deleted recipes will NEVER be re-added on page reload or app restart.
  */
 export async function initializeDatabase() {
   const db = await getDB();
-  const tx = db.transaction('recipes', 'readwrite');
-  
-  for (const recipe of INITIAL_RECIPES) {
-    const existing = await tx.store.get(recipe.id);
-    if (!existing) {
-      await tx.store.put(recipe);
-    } else if (existing.isGlutenFree === undefined && recipe.isGlutenFree !== undefined) {
-      // Update with gluten-free flag if missing
-      existing.isGlutenFree = recipe.isGlutenFree;
-      await tx.store.put(existing);
-    }
+
+  // 1. Remove obsolete prototype template recipes if present
+  const txPurge = db.transaction('recipes', 'readwrite');
+  for (const oldId of OBSOLETE_TEMPLATE_IDS) {
+    await txPurge.store.delete(oldId);
   }
-  await tx.done;
+  await txPurge.done;
+
+  // 2. Seed the 8 curated recipes from ricette.md only once
+  const seedFlag = await db.get('settings', 'catalog_seeded_v2');
+  if (!seedFlag) {
+    const txSeed = db.transaction(['recipes', 'settings'], 'readwrite');
+    for (const recipe of INITIAL_RECIPES) {
+      const existing = await txSeed.objectStore('recipes').get(recipe.id);
+      if (!existing) {
+        await txSeed.objectStore('recipes').put(recipe);
+      }
+    }
+    // Record that seeding was completed: deleted recipes will NEVER re-appear
+    await txSeed.objectStore('settings').put({ key: 'catalog_seeded_v2', value: true });
+    await txSeed.done;
+  }
+
+  // 3. Sync clean titles and notes for existing recipes (without re-adding deleted ones)
+  const cleanedFlag = await db.get('settings', 'catalog_cleaned_v3');
+  if (!cleanedFlag) {
+    const txClean = db.transaction(['recipes', 'settings'], 'readwrite');
+    for (const sample of INITIAL_RECIPES) {
+      const existing = await txClean.objectStore('recipes').get(sample.id);
+      if (existing) {
+        existing.title = sample.title;
+        existing.personalNotes = sample.personalNotes;
+        existing.ingredients = sample.ingredients;
+        existing.steps = sample.steps;
+        existing.sourceName = sample.sourceName;
+        await txClean.objectStore('recipes').put(existing);
+      }
+    }
+    await txClean.objectStore('settings').put({ key: 'catalog_cleaned_v3', value: true });
+    await txClean.done;
+  }
 }
 
 // ------------------- RECIPES CRUD -------------------
