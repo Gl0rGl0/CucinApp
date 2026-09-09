@@ -143,6 +143,12 @@ input, textarea, select {
   font-size: 0.95rem;
   transition: border-color 0.2s, background-color 0.2s;
   outline: none;
+  box-sizing: border-box;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
 }
 
 input:focus, textarea:focus, select:focus {

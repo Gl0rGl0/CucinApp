@@ -103,6 +103,9 @@ export function RecipeDetail({
         <div className="detail-hero-gradient"></div>
         <div className="detail-hero-meta">
           <span className="badge badge-primary">{recipe.category || 'Ricetta'}</span>
+          {recipe.isGlutenFree && (
+            <span className="badge badge-gf">🌾 Senza Glutine</span>
+          )}
           {recipe.difficulty && (
             <span className="badge badge-blue">Difficoltà: {recipe.difficulty}</span>
           )}

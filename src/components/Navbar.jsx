@@ -20,7 +20,7 @@ export function Navbar({
           <div>
             <div className="logo-title">
               CucinApp
-              <span className="logo-version">v1.0</span>
+              <span className="logo-version">v1.1</span>
             </div>
             <div className="logo-subtitle">Il tuo ricettario</div>
           </div>

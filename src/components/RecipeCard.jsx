@@ -32,9 +32,14 @@ export function RecipeCard({ recipe, onSelect, onToggleFavorite, onStartCook }) 
           <Heart size={18} fill={recipe.isFavorite ? '#f43f5e' : 'none'} color={recipe.isFavorite ? '#f43f5e' : '#ffffff'} />
         </button>
 
-        {recipe.category && (
-          <span className="card-category-badge">{recipe.category}</span>
-        )}
+        <div className="card-badges-container">
+          {recipe.category && (
+            <span className="card-category-badge">{recipe.category}</span>
+          )}
+          {recipe.isGlutenFree && (
+            <span className="card-gf-badge" title="Ricetta Senza Glutine">🌾 Senza Glutine</span>
+          )}
+        </div>
       </div>
 
       <div className="card-content">

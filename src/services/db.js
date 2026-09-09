@@ -34,18 +34,23 @@ export async function getDB() {
 }
 
 /**
- * Ensures initial starter recipes exist
+ * Ensures starter recipes and new recipes from the catalog exist in IndexedDB
  */
 export async function initializeDatabase() {
   const db = await getDB();
-  const count = await db.count('recipes');
-  if (count === 0) {
-    const tx = db.transaction('recipes', 'readwrite');
-    for (const recipe of INITIAL_RECIPES) {
+  const tx = db.transaction('recipes', 'readwrite');
+  
+  for (const recipe of INITIAL_RECIPES) {
+    const existing = await tx.store.get(recipe.id);
+    if (!existing) {
       await tx.store.put(recipe);
+    } else if (existing.isGlutenFree === undefined && recipe.isGlutenFree !== undefined) {
+      // Update with gluten-free flag if missing
+      existing.isGlutenFree = recipe.isGlutenFree;
+      await tx.store.put(existing);
     }
-    await tx.done;
   }
+  await tx.done;
 }
 
 // ------------------- RECIPES CRUD -------------------
@@ -179,7 +184,7 @@ export async function exportAllData() {
   const shoppingList = await db.getAll('shoppingList');
   return {
     app: 'CucinApp',
-    version: '1.0.0',
+    version: '1.1.0',
     exportDate: new Date().toISOString(),
     recipes,
     shoppingList

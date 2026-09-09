@@ -48,6 +48,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tutte');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [onlyGlutenFree, setOnlyGlutenFree] = useState(false);
 
   // Theme state
   const [theme, setTheme] = useState(() => {
@@ -121,6 +122,11 @@ export default function App() {
         return false;
       }
 
+      // Gluten-Free filter
+      if (onlyGlutenFree && !recipe.isGlutenFree) {
+        return false;
+      }
+
       // Search query (title, category, or ingredients)
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
@@ -137,7 +143,7 @@ export default function App() {
 
       return true;
     });
-  }, [recipes, selectedCategory, onlyFavorites, searchQuery]);
+  }, [recipes, selectedCategory, onlyFavorites, onlyGlutenFree, searchQuery]);
 
   // Recipe CRUD Handlers
   const handleSaveRecipe = async (recipeData) => {
@@ -317,14 +323,27 @@ export default function App() {
                 )}
               </div>
 
-              {/* Categories and Favorites filter */}
+              {/* Categories, Favorites, and Gluten-Free filter */}
               <div className="categories-scroll">
                 <button
                   className={`cat-pill fav-filter-pill ${onlyFavorites ? 'active' : ''}`}
-                  onClick={() => setOnlyFavorites(prev => !prev)}
+                  onClick={() => {
+                    setOnlyFavorites(prev => !prev);
+                    if (!onlyFavorites) setOnlyGlutenFree(false);
+                  }}
                 >
                   <Heart size={14} fill={onlyFavorites ? '#ffffff' : 'none'} />
                   <span>Preferiti</span>
+                </button>
+
+                <button
+                  className={`cat-pill gf-filter-pill ${onlyGlutenFree ? 'active' : ''}`}
+                  onClick={() => {
+                    setOnlyGlutenFree(prev => !prev);
+                  }}
+                  title="Filtra solo ricette senza glutine"
+                >
+                  <span>🌾 Senza Glutine</span>
                 </button>
 
                 {CATEGORIES.map(cat => (
@@ -354,6 +373,8 @@ export default function App() {
                     ? `Non abbiamo trovato ricette corrispondenti a "${searchQuery}".`
                     : onlyFavorites
                     ? 'Non hai ancora aggiunto nessuna ricetta ai preferiti!'
+                    : onlyGlutenFree
+                    ? 'Nessuna ricetta senza glutine trovata con questi filtri.'
                     : 'Il tuo ricettario è ancora vuoto.'}
                 </p>
                 <button

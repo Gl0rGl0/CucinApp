@@ -20,6 +20,7 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
   const [imageUrl, setImageUrl] = useState(initialRecipe?.imageUrl || '');
   const [personalNotes, setPersonalNotes] = useState(initialRecipe?.personalNotes || '');
   const [isFavorite, setIsFavorite] = useState(initialRecipe?.isFavorite || false);
+  const [isGlutenFree, setIsGlutenFree] = useState(initialRecipe?.isGlutenFree || false);
 
   const [ingredients, setIngredients] = useState(
     initialRecipe?.ingredients?.length > 0
@@ -105,6 +106,12 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
     if (parsed.cookTime) setCookTime(parsed.cookTime);
     if (parsed.ingredients?.length > 0) setIngredients(parsed.ingredients);
     if (parsed.steps?.length > 0) setSteps(parsed.steps);
+
+    // Auto-detect gluten-free from parsed content
+    const fullText = (parsed.title + ' ' + JSON.stringify(parsed.ingredients) + ' ' + JSON.stringify(parsed.steps)).toLowerCase();
+    if (fullText.includes('senza glutine') || fullText.includes('gluten-free') || fullText.includes('farina di riso')) {
+      setIsGlutenFree(true);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -134,6 +141,7 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
       title: title.trim(),
       category,
       difficulty,
+      isGlutenFree,
       prepTime: Number(prepTime) || 0,
       cookTime: Number(cookTime) || 0,
       servings: Number(servings) || 4,
@@ -163,11 +171,12 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
 
         <button
           type="button"
-          className="btn-secondary btn-sm highlight-pulse"
-          onClick={() => setShowPasteModal(true)}
+          className="btn-primary"
+          onClick={handleSubmit}
+          title="Salva la ricetta"
         >
-          <Sparkles size={16} />
-          <span>Incolla Testo</span>
+          <Save size={18} />
+          <span>Salva</span>
         </button>
       </div>
 
@@ -179,6 +188,21 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
       )}
 
       <form onSubmit={handleSubmit} className="form-main-body">
+        {/* Quick Paste Banner */}
+        <div className="quick-paste-banner">
+          <div className="paste-banner-info">
+            <Sparkles size={18} className="text-highlight-orange" />
+            <span>Vuoi velocizzare? Incolla una ricetta copiata dal web o dagli appunti:</span>
+          </div>
+          <button
+            type="button"
+            className="btn-secondary btn-sm"
+            onClick={() => setShowPasteModal(true)}
+          >
+            <Sparkles size={14} />
+            <span>Incolla Testo</span>
+          </button>
+        </div>
         {/* Section 1: Main info */}
         <div className="form-card">
           <h3 className="form-section-title">Informazioni Generali</h3>
@@ -193,6 +217,20 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
               className="input-title"
               required
             />
+          </div>
+
+          <div className="form-group-checkbox mb-3">
+            <label className="checkbox-toggle-label">
+              <input
+                type="checkbox"
+                checked={isGlutenFree}
+                onChange={(e) => setIsGlutenFree(e.target.checked)}
+                className="checkbox-native"
+              />
+              <span className="checkbox-toggle-text">
+                🌾 Ricetta Senza Glutine (Gluten-Free)
+              </span>
+            </label>
           </div>
 
           <div className="form-grid-3">
@@ -436,13 +474,14 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
         </div>
 
         {/* Section 5: Notes */}
-        <div className="form-card">
+        <div className="form-card notes-form-card">
           <h3 className="form-section-title">Note Personali & Variazioni</h3>
           <textarea
-            rows={3}
+            rows={5}
             placeholder="Appuntati le tue note, varianti, marche consigliate o cosa cambiare la volta successiva..."
             value={personalNotes}
             onChange={(e) => setPersonalNotes(e.target.value)}
+            className="notes-form-textarea"
           />
         </div>
 
