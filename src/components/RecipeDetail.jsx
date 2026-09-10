@@ -255,10 +255,19 @@ export function RecipeDetail({
                 <div className="step-content">
                   <p className="step-instruction">{step.instruction}</p>
 
-                  {step.timerMinutes > 0 && (
+                  {((Number(step.timerMinutes) || 0) > 0 || (Number(step.timerSeconds) || 0) > 0) && (
                     <div className="step-timer-pill">
                       <Timer size={16} />
-                      <span>Timer suggerito: {step.timerMinutes} minuti</span>
+                      <span>
+                        Timer suggerito:{' '}
+                        {(() => {
+                          const m = Number(step.timerMinutes) || 0;
+                          const s = Number(step.timerSeconds) || 0;
+                          if (m > 0 && s > 0) return `${m} min ${s} s`;
+                          if (m > 0) return `${m} minuti`;
+                          return `${s} secondi`;
+                        })()}
+                      </span>
                     </div>
                   )}
 

@@ -1,7 +1,8 @@
 // Web Audio API chime generator for timers and step completions
 let audioCtx = null;
+let isAudioUnlocked = false;
 
-function getAudioContext() {
+export function getAudioContext() {
   if (!audioCtx) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (AudioContext) {
@@ -15,58 +16,84 @@ function getAudioContext() {
 }
 
 /**
+ * Pre-unlock Web Audio API on first user interaction (touch/click)
+ * so mobile browsers allow alarm playback without blocking
+ */
+export function unlockAudio() {
+  if (isAudioUnlocked) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(() => {
+      isAudioUnlocked = true;
+    }).catch(() => {});
+  } else {
+    isAudioUnlocked = true;
+  }
+}
+
+// Attach listener once for initial user gesture
+if (typeof window !== 'undefined') {
+  const unlockEvents = ['touchstart', 'touchend', 'click', 'keydown'];
+  const handleUnlock = () => {
+    unlockAudio();
+    unlockEvents.forEach(evt => window.removeEventListener(evt, handleUnlock, true));
+  };
+  unlockEvents.forEach(evt => window.addEventListener(evt, handleUnlock, { capture: true, passive: true }));
+}
+
+/**
  * Play a cheerful chime when a timer ends (repeated 3-note melodic arpeggio)
  */
 export function playTimerAlarm() {
+  unlockAudio();
   const ctx = getAudioContext();
   if (!ctx) return;
 
   const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-  const now = ctx.currentTime;
+  const playPattern = (context, offset = 0, oscType = 'sine', volume = 0.35) => {
+    const now = context.currentTime + offset;
+    notes.forEach((freq, index) => {
+      const osc = context.createOscillator();
+      const gain = context.createGain();
 
-  notes.forEach((freq, index) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+      osc.type = oscType;
+      osc.frequency.setValueAtTime(freq, now + index * 0.14);
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, now + index * 0.15);
+      gain.gain.setValueAtTime(0.001, now + index * 0.14);
+      gain.gain.exponentialRampToValueAtTime(volume, now + index * 0.14 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.14 + 0.35);
 
-    gain.gain.setValueAtTime(0.001, now + index * 0.15);
-    gain.gain.exponentialRampToValueAtTime(0.3, now + index * 0.15 + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.15 + 0.35);
+      osc.connect(gain);
+      gain.connect(context.destination);
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+      osc.start(now + index * 0.14);
+      osc.stop(now + index * 0.14 + 0.4);
+    });
+  };
 
-    osc.start(now + index * 0.15);
-    osc.stop(now + index * 0.15 + 0.4);
-  });
+  // Immediate chime
+  playPattern(ctx, 0, 'sine', 0.35);
 
-  // Second chime slightly delayed for extra noticeability in noisy kitchen
+  // Second chime with triangle waveform for punchiness
   setTimeout(() => {
     const ctx2 = getAudioContext();
-    if (!ctx2) return;
-    const now2 = ctx2.currentTime;
-    notes.forEach((freq, index) => {
-      const osc = ctx2.createOscillator();
-      const gain = ctx2.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now2 + index * 0.14);
-      gain.gain.setValueAtTime(0.001, now2 + index * 0.14);
-      gain.gain.exponentialRampToValueAtTime(0.25, now2 + index * 0.14 + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now2 + index * 0.14 + 0.35);
-      osc.connect(gain);
-      gain.connect(ctx2.destination);
-      osc.start(now2 + index * 0.14);
-      osc.stop(now2 + index * 0.14 + 0.4);
-    });
-  }, 700);
+    if (ctx2) playPattern(ctx2, 0, 'triangle', 0.3);
+  }, 650);
+
+  // Third confirmation chime
+  setTimeout(() => {
+    const ctx3 = getAudioContext();
+    if (ctx3) playPattern(ctx3, 0, 'sine', 0.35);
+  }, 1300);
 }
 
 /**
  * Play a subtle click/ding when checking a step
  */
 export function playStepDing() {
+  unlockAudio();
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -101,7 +128,8 @@ export function triggerHaptic(type = 'light') {
       } else if (type === 'success') {
         navigator.vibrate([40, 60, 80]);
       } else if (type === 'alarm') {
-        navigator.vibrate([500, 200, 500, 200, 800]);
+        // Repeated distinct alarm pattern: 400ms on, 150ms off, 400ms on, 150ms off, 800ms on
+        navigator.vibrate([400, 150, 400, 150, 800]);
       }
     } catch {
       // Ignore vibration errors if blocked

@@ -130,7 +130,13 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
       return;
     }
 
-    const validSteps = steps.filter(s => s.instruction && s.instruction.trim().length > 0);
+    const validSteps = steps
+      .filter(s => s.instruction && s.instruction.trim().length > 0)
+      .map(s => ({
+        ...s,
+        timerMinutes: Math.max(0, parseInt(s.timerMinutes, 10) || 0),
+        timerSeconds: Math.max(0, Math.min(59, parseInt(s.timerSeconds, 10) || 0))
+      }));
     if (validSteps.length === 0) {
       setErrorMsg('Inserisci almeno un passaggio della preparazione.');
       return;
@@ -314,17 +320,7 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
               <Camera size={18} />
               <span>Carica da fotocamera / galleria</span>
             </button>
-
-            <span className="text-muted text-sm">oppure inserisci URL foto:</span>
           </div>
-
-          <input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://images.unsplash.com/... o incolla link immagine"
-            className="mt-2"
-          />
 
           {imageUrl && (
             <div className="image-preview-box mt-3">
@@ -426,15 +422,31 @@ export function RecipeForm({ initialRecipe, onSave, onCancel }) {
                 <div className="step-extra-fields">
                   <div className="step-timer-input">
                     <Timer size={16} className="text-secondary" />
-                    <span>Timer passaggio (minuti):</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="300"
-                      value={step.timerMinutes || 0}
-                      onChange={(e) => handleUpdateStep(idx, 'timerMinutes', parseInt(e.target.value) || 0)}
-                      className="input-min"
-                    />
+                    <span>Timer:</span>
+                    <div className="timer-inputs-dual">
+                      <input
+                        type="number"
+                        min="0"
+                        max="300"
+                        placeholder="0"
+                        value={step.timerMinutes ?? ''}
+                        onChange={(e) => handleUpdateStep(idx, 'timerMinutes', parseInt(e.target.value) || 0)}
+                        className="input-min"
+                        title="Minuti"
+                      />
+                      <span className="timer-unit-lbl">m</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        placeholder="0"
+                        value={step.timerSeconds ?? ''}
+                        onChange={(e) => handleUpdateStep(idx, 'timerSeconds', Math.min(59, parseInt(e.target.value) || 0))}
+                        className="input-sec"
+                        title="Secondi (0-59)"
+                      />
+                      <span className="timer-unit-lbl">s</span>
+                    </div>
                   </div>
 
                   <input

@@ -104,6 +104,19 @@ Il deploy è **completamente automatizzato via GitHub**:
 
 ## 📝 Registro Versioni (Changelog)
 
+### [1.4.0] - 2026-09-11
+* **Risoluzione Scroll & Modalità Cottura Ermetica:**
+  * Blocco completo e isolamento dello scorrimento della pagina/ricetta sottostante durante l'intera sessione di cucina a schermo intero (`overscroll-behavior: contain` e blocco overflow su `body` e `html`).
+  * Risolto bug di ripristino accidentale dello scroll causato dalla rinegoziazione del WakeLock.
+  * Eliminata la barra di scorrimento verticale fittizia e rimossi margini in eccesso che provocavano rubber-banding e scorrimenti vuoti.
+* **Miglioramenti UI & Timer Dettagliati:**
+  * Input del timer riorganizzato con campi separati per Minuti e Secondi in creazione ricetta, dettaglio e modalità cucina.
+  * Tasti freccia di navigazione dei passaggi compatti (`<` e `>`) per massima usabilità su schermi smartphone.
+  * Icona WakeLock discreta con richiesta di conferma e opzione "Non mostrare più".
+  * Pre-sblocco del contesto audio al primo tocco e allarme a tre rintocchi con vibrazione ritmica di fine cottura.
+  * Icone SVG dedicate per le scorciatoie della schermata home (Nuova Ricetta, Spesa, Svuotafrigo).
+  * Rimossa l'opzione testo dell'URL immagine, privilegiando lo scatto da fotocamera e la galleria.
+
 ### [1.3.1] - 2026-09-10
 * **Pannello Impostazioni Dedicato (`SettingsModal.jsx`):**
   * Riorganizzazione dei comandi secondari in una modale centralizzata accessibile tramite l'icona ingranaggio nella Navbar.

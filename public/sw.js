@@ -5,7 +5,10 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/favicon.svg',
   '/pwa-192x192.png',
-  '/pwa-512x512.png'
+  '/pwa-512x512.png',
+  '/shortcut-new.svg',
+  '/shortcut-shopping.svg',
+  '/shortcut-fridge.svg'
 ];
 
 self.addEventListener('install', (event) => {

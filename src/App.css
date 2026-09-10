@@ -5,11 +5,17 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(var(--bottom-nav-height) + 24px);
+  padding-bottom: calc(var(--bottom-nav-height) + 16px);
+  width: 100%;
+}
+
+.app-container.in-subview {
+  padding-bottom: 24px;
 }
 
 @media (min-width: 768px) {
-  .app-container {
+  .app-container,
+  .app-container.in-subview {
     padding-bottom: 32px;
   }
 }
@@ -136,6 +142,7 @@
   width: 100%;
   padding: 20px 16px;
   flex: 1;
+  box-sizing: border-box;
 }
 
 /* Search & Filters Section */
@@ -979,11 +986,15 @@
 .cook-mode-fullscreen {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   z-index: 2000;
   background-color: var(--bg-app);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .cook-mode-header {
@@ -994,8 +1005,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -1047,16 +1057,52 @@
   gap: 10px;
 }
 
-.wakelock-pill {
+.btn-wakelock-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface-elevated);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-wakelock-toggle.active {
+  background-color: var(--accent-green-bg);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: var(--accent-green);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-wakelock-toggle.inactive {
+  background-color: var(--accent-red-bg);
+  border-color: rgba(244, 63, 94, 0.3);
+  color: var(--accent-red);
+  opacity: 0.85;
+}
+
+.btn-wakelock-toggle:hover {
+  transform: scale(1.05);
+}
+
+.modal-confirm-wakelock {
+  max-width: 440px;
+}
+
+.wakelock-confirm-text {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.wakelock-confirm-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-  background-color: var(--accent-green-bg);
-  color: var(--accent-green);
-  font-size: 0.78rem;
-  font-weight: 600;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .btn-ingredients-toggle {
@@ -1095,6 +1141,9 @@
   padding: 24px 16px;
   gap: 20px;
   position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cook-ingredients-drawer {
@@ -1354,8 +1403,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px env(safe-area-inset-bottom, 0px) 16px;
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -1370,6 +1418,15 @@
   color: var(--text-main);
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+.btn-cook-nav-icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .cook-step-dots {
@@ -1596,10 +1653,29 @@
   gap: 8px;
   font-size: 0.85rem;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
-.input-min {
-  width: 70px;
+.timer-inputs-dual {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-min,
+.input-sec {
+  width: 58px;
+  padding: 8px 6px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.timer-unit-lbl {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-right: 2px;
 }
 
 .input-tip {

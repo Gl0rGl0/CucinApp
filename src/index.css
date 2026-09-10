@@ -82,9 +82,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
-  overscroll-behavior-y: none;
+html {
+  overflow-x: hidden;
 }
 
 body {
@@ -94,24 +93,12 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: var(--radius-full);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+#root {
+  min-height: 100vh;
 }
 
 /* Base button styles */

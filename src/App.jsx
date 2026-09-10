@@ -172,6 +172,7 @@ export default function App() {
 
   const handleOpenRecipeDetail = (rec) => {
     setSelectedRecipe(rec);
+    window.scrollTo({ top: 0, behavior: 'instant' });
     navigateToView('recipe');
   };
 
@@ -179,11 +180,13 @@ export default function App() {
     setSelectedRecipe(null);
     setEditingRecipe({});
     setActiveTab('recipes');
+    window.scrollTo({ top: 0, behavior: 'instant' });
     navigateToView('edit');
   };
 
   const handleEditRecipe = (rec) => {
     setEditingRecipe(rec);
+    window.scrollTo({ top: 0, behavior: 'instant' });
     navigateToView('edit');
   };
 
@@ -328,6 +331,7 @@ export default function App() {
 
   // Bottom nav tab change
   const handleSelectTab = (tab) => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (tab === 'new') {
       handleOpenNewRecipe();
     } else if (tab === 'fridge') {
@@ -341,13 +345,16 @@ export default function App() {
       setActiveTab('recipes');
       setSelectedRecipe(null);
       setEditingRecipe(null);
+      navigateToView('home');
     }
   };
 
   const uncheckedShoppingCount = shoppingList.filter(i => !i.checked).length;
 
+  const isSubViewOpen = Boolean(selectedRecipe || editingRecipe || cookingSession);
+
   return (
-    <div className="app-container">
+    <div className={`app-container ${isSubViewOpen ? 'in-subview' : ''}`}>
       {/* Top Navbar */}
       <Navbar
         onOpenNewRecipe={handleOpenNewRecipe}
@@ -526,12 +533,14 @@ export default function App() {
         onDataReloaded={loadData}
       />
 
-      {/* Mobile Bottom Navigation Bar */}
-      <BottomNav
-        activeTab={activeTab}
-        onSelectTab={handleSelectTab}
-        shoppingCount={uncheckedShoppingCount}
-      />
+      {/* Mobile Bottom Navigation Bar (visibile solo nella home/catalogo e nella spesa) */}
+      {!isSubViewOpen && (
+        <BottomNav
+          activeTab={activeTab}
+          onSelectTab={handleSelectTab}
+          shoppingCount={uncheckedShoppingCount}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   X, ChevronLeft, ChevronRight, Check, Play, Pause, RotateCcw,
-  Timer, Lock, Sparkles, Eye, EyeOff, AlertCircle, Plus
+  Timer, Lock, LockOpen, Sparkles, Eye, EyeOff, AlertCircle, Plus
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { requestWakeLock, releaseWakeLock, setupWakeLockAutoRenew } from '../services/wakeLock';
@@ -13,6 +13,8 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
   const [completedSteps, setCompletedSteps] = useState({});
   const [showIngredientsDrawer, setShowIngredientsDrawer] = useState(false);
   const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [showWakeLockConfirm, setShowWakeLockConfirm] = useState(false);
+  const [dontShowWakeLockAgain, setDontShowWakeLockAgain] = useState(false);
 
   // Timer state for current step
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
@@ -25,7 +27,30 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
   const isLastStep = currentStepIndex === steps.length - 1;
   const allStepsCompleted = steps.length > 0 && steps.every((_, idx) => completedSteps[idx]);
 
-  // Handle Wake Lock
+  // Total step duration in seconds (supporting both timerMinutes and timerSeconds)
+  const getStepTotalSeconds = (step) => {
+    if (!step) return 0;
+    const mins = Number(step.timerMinutes) || 0;
+    const secs = Number(step.timerSeconds) || 0;
+    return mins * 60 + secs;
+  };
+
+  // Prevent background window / recipe from scrolling while cook mode is active
+  useEffect(() => {
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      stopHaptic();
+    };
+  }, []);
+
+  // Handle Wake Lock independently
   useEffect(() => {
     let active = true;
     async function activateWakeLock() {
@@ -34,15 +59,14 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
     }
     activateWakeLock();
 
-    const cleanupRenew = setupWakeLockAutoRenew(() => active);
+    const cleanupRenew = setupWakeLockAutoRenew(() => active && wakeLockActive);
 
     return () => {
       active = false;
       cleanupRenew();
       releaseWakeLock();
-      stopHaptic();
     };
-  }, []);
+  }, [wakeLockActive]);
 
   // When step changes, set timer if specified
   useEffect(() => {
@@ -50,12 +74,9 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
     setIsTimerRunning(false);
     setTimerAlarmRinging(false);
 
-    if (currentStep.timerMinutes > 0) {
-      setTimerSecondsLeft(currentStep.timerMinutes * 60);
-    } else {
-      setTimerSecondsLeft(0);
-    }
-  }, [currentStepIndex, currentStep.timerMinutes]);
+    const stepSecs = getStepTotalSeconds(currentStep);
+    setTimerSecondsLeft(stepSecs);
+  }, [currentStepIndex, currentStep.timerMinutes, currentStep.timerSeconds]);
 
   const timerTargetEndRef = useRef(null);
 
@@ -134,7 +155,7 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
     setIsTimerRunning(false);
     stopHaptic();
     setTimerAlarmRinging(false);
-    setTimerSecondsLeft((currentStep.timerMinutes || 0) * 60);
+    setTimerSecondsLeft(getStepTotalSeconds(currentStep));
   };
 
   const addExtraMinute = (extraSec = 60) => {
@@ -142,6 +163,31 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
     if (timerTargetEndRef.current) {
       timerTargetEndRef.current += extraSec * 1000;
     }
+  };
+
+  // Toggle WakeLock with confirmation modal if currently active
+  const handleToggleWakeLock = async () => {
+    if (wakeLockActive) {
+      const dismissed = localStorage.getItem('cucinapp_wakelock_confirm_dismissed') === 'true';
+      if (dismissed) {
+        await releaseWakeLock();
+        setWakeLockActive(false);
+      } else {
+        setShowWakeLockConfirm(true);
+      }
+    } else {
+      const ok = await requestWakeLock();
+      setWakeLockActive(ok);
+    }
+  };
+
+  const confirmDisableWakeLock = async () => {
+    if (dontShowWakeLockAgain) {
+      localStorage.setItem('cucinapp_wakelock_confirm_dismissed', 'true');
+    }
+    await releaseWakeLock();
+    setWakeLockActive(false);
+    setShowWakeLockConfirm(false);
   };
 
   const toggleStepDone = (idx) => {
@@ -203,12 +249,19 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
         </div>
 
         <div className="cook-header-right">
-          {wakeLockActive && (
-            <div className="wakelock-pill" title="Lo schermo rimarrà acceso finché sei in questa modalità">
-              <Lock size={12} />
-              <span>Schermo sempre attivo</span>
-            </div>
-          )}
+          <button
+            type="button"
+            className={`btn-wakelock-toggle ${wakeLockActive ? 'active' : 'inactive'}`}
+            onClick={handleToggleWakeLock}
+            title={wakeLockActive ? 'Schermo sempre attivo (ON) - Clicca per disattivare' : 'Schermo normale (OFF) - Clicca per mantenere schermo attivo'}
+            aria-label={wakeLockActive ? 'Disattiva schermo sempre attivo' : 'Attiva schermo sempre attivo'}
+          >
+            {wakeLockActive ? (
+              <Lock size={18} className="icon-wakelock-on" />
+            ) : (
+              <LockOpen size={18} className="icon-wakelock-off" />
+            )}
+          </button>
 
           <button
             className={`btn-ingredients-toggle ${showIngredientsDrawer ? 'active' : ''}`}
@@ -278,7 +331,7 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
           )}
 
           {/* Big Interactive Timer Box */}
-          {(currentStep.timerMinutes > 0 || timerSecondsLeft > 0) && (
+          {(getStepTotalSeconds(currentStep) > 0 || timerSecondsLeft > 0) && (
             <div className={`cook-timer-box ${timerAlarmRinging ? 'timer-ringing' : ''}`}>
               <div className="timer-display-wrap">
                 <Timer size={24} className="timer-display-icon" />
@@ -347,15 +400,16 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
         </div>
       </div>
 
-      {/* Bottom Navigation for Steps */}
+      {/* Bottom Navigation for Steps - Compact Iconic Arrow Buttons */}
       <div className="cook-bottom-bar">
         <button
-          className="btn-cook-nav"
+          className="btn-cook-nav btn-cook-nav-icon"
           disabled={currentStepIndex === 0}
           onClick={() => setCurrentStepIndex(prev => Math.max(0, prev - 1))}
+          title="Passaggio precedente"
+          aria-label="Passaggio precedente"
         >
-          <ChevronLeft size={20} />
-          <span>Precedente</span>
+          <ChevronLeft size={24} />
         </button>
 
         {/* Step dots */}
@@ -371,14 +425,66 @@ export function CookModeModal({ recipe, servings, unitSystem = 'metric', onClose
         </div>
 
         <button
-          className="btn-cook-nav"
+          className="btn-cook-nav btn-cook-nav-icon"
           disabled={isLastStep}
           onClick={() => setCurrentStepIndex(prev => Math.min(steps.length - 1, prev + 1))}
+          title="Passaggio successivo"
+          aria-label="Passaggio successivo"
         >
-          <span>Successivo</span>
-          <ChevronRight size={20} />
+          <ChevronRight size={24} />
         </button>
       </div>
+
+      {/* Wake Lock Confirmation Modal */}
+      {showWakeLockConfirm && (
+        <div className="modal-backdrop animate-fade-in" onClick={() => setShowWakeLockConfirm(false)}>
+          <div className="modal-content modal-confirm-wakelock" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-header-title">
+                <LockOpen size={20} className="text-highlight-orange" />
+                <h3>Disattivare schermo sempre attivo?</h3>
+              </div>
+              <button className="btn-icon-sm" onClick={() => setShowWakeLockConfirm(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="wakelock-confirm-text">
+                Se disattivi lo schermo attivo, il display dello smartphone potrebbe oscurarsi o spegnersi automaticamente secondo le impostazioni del telefono mentre cucini.
+              </p>
+              <div className="form-group-checkbox mt-3">
+                <label className="checkbox-toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={dontShowWakeLockAgain}
+                    onChange={(e) => setDontShowWakeLockAgain(e.target.checked)}
+                    className="checkbox-native"
+                  />
+                  <span className="checkbox-toggle-text text-sm">
+                    Non mostrare più questa conferma
+                  </span>
+                </label>
+              </div>
+              <div className="wakelock-confirm-actions mt-4">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowWakeLockConfirm(false)}
+                >
+                  Mantieni attivo
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={confirmDisableWakeLock}
+                >
+                  Disattiva
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

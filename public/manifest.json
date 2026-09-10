@@ -52,6 +52,11 @@
       "url": "/?action=new",
       "icons": [
         {
+          "src": "/shortcut-new.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        },
+        {
           "src": "/pwa-192x192.png",
           "sizes": "192x192",
           "type": "image/png"
@@ -65,6 +70,11 @@
       "url": "/?tab=shopping",
       "icons": [
         {
+          "src": "/shortcut-shopping.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        },
+        {
           "src": "/pwa-192x192.png",
           "sizes": "192x192",
           "type": "image/png"
@@ -77,6 +87,11 @@
       "description": "Trova cosa cucinare con i tuoi ingredienti",
       "url": "/?action=fridge",
       "icons": [
+        {
+          "src": "/shortcut-fridge.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        },
         {
           "src": "/pwa-192x192.png",
           "sizes": "192x192",
